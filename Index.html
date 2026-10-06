@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DO NOT PRESS - AI Narrator Rage</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #050505;
+    color: white;
+    transition: background 0.3s;
+}
+
+#app {
+    width: 100vw;
+    height: 100vh;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+h1 {
+    font-size: clamp(28px, 5vw, 55px);
+    margin: 0;
+    text-shadow: 0 0 20px red;
+    text-align: center;
+    letter-spacing: 2px;
+}
+
+/* AI Narrator Box */
+#narratorBox {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: rgba(20, 0, 0, 0.7);
+    border: 2px solid #ff2222;
+    border-radius: 15px;
+    padding: 12px 25px;
+    margin: 15px 10px;
+    box-shadow: 0 0 25px rgba(255, 0, 0, 0.4);
+    max-width: 90vw;
+    z-index: 100;
+    transition: transform 0.2s, border-color 0.3s;
+}
+
+#narratorAvatar {
+    font-size: 42px;
+    line-height: 1;
+    filter: drop-shadow(0 0 10px #ff0000);
+    animation: pulse 1.5s infinite alternate;
+}
+
+#narrator {
+    font-size: clamp(18px, 3.5vw, 24px);
+    color: #ff8888;
+    font-weight: bold;
+    min-height: 32px;
+    text-align: left;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.6);
+}
+
+#chaosButton {
+    width: 210px;
+    height: 210px;
+    border-radius: 50%;
+    border: 8px solid #550000;
+    background: radial-gradient(circle, #ff5555, #8b0000);
+    color: white;
+    font-size: 26px;
+    font-weight: bold;
+    cursor: pointer;
+    position: relative;
+    z-index: 20;
+    box-shadow: 0 0 25px red, 0 0 80px red;
+    /* Smooth transition allows human players to track & hit the button */
+    transition: width .25s, height .25s, opacity .3s, transform 0.15s ease-out, left 0.35s ease-out, top 0.35s ease-out;
+    touch-action: manipulation;
+}
+
+#chaosButton:active {
+    transform: scale(.85);
+}
+
+.fake {
+    position: absolute;
+    border-radius: 50%;
+    border: 6px solid #440000;
+    background: radial-gradient(circle,#ff5555,#700000);
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 10;
+    box-shadow: 0 0 20px red;
+}
+
+/* Annoying Popups */
+.popup {
+    position: absolute;
+    background: #111;
+    border: 3px solid #ff0000;
+    border-radius: 10px;
+    padding: 15px 20px;
+    color: #fff;
+    box-shadow: 0 0 30px rgba(255,0,0,0.8);
+    z-index: 500;
+    text-align: center;
+    min-width: 220px;
+    animation: popupSpawn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.popup button {
+    margin-top: 10px;
+    padding: 6px 16px;
+    background: #ff2222;
+    border: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#counter {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+#meter {
+    width: 400px;
+    max-width: 75vw;
+    height: 22px;
+    border: 2px solid white;
+    border-radius: 20px;
+    overflow: hidden;
+    margin-top: 10px;
+    background: #111;
+}
+
+#meterFill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, lime, yellow, red);
+    transition: width .25s;
+}
+
+#event {
+    position: absolute;
+    bottom: 20px;
+    width: 100%;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffaaaa;
+    pointer-events: none;
+}
+
+/* Bottom Left Chat System */
+#chatContainer {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 280px;
+    max-width: 40vw;
+}
+
+#chatLog {
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 8px;
+    max-height: 110px;
+    overflow-y: auto;
+    font-size: 13px;
+    color: #ccc;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.chat-msg {
+    margin: 0;
+    word-break: break-word;
+}
+
+.chat-msg.user {
+    color: #00ffff;
+}
+
+.chat-msg.ai {
+    color: #ff6666;
+    font-weight: bold;
+}
+
+#chatForm {
+    display: flex;
+    gap: 5px;
+}
+
+#chatInput {
+    flex: 1;
+    background: #111;
+    border: 1px solid #ff4444;
+    border-radius: 5px;
+    color: white;
+    padding: 8px 10px;
+    font-size: 14px;
+    outline: none;
+}
+
+#chatInput:focus {
+    box-shadow: 0 0 10px rgba(255, 68, 68, 0.6);
+}
+
+#chatSend {
+    background: #990000;
+    border: none;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#chatSend:hover {
+    background: #ff0000;
+}
+
+.top-bar {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    right: 15px;
+    display: flex;
+    justify-content: space-between;
+    z-index: 1000;
+}
+
+.btn-ctrl {
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid #555;
+    background: #222;
+    color: white;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+
+.btn-ctrl:hover {
+    background: #333;
+}
+
+.particle {
+    position: absolute;
+    pointer-events: none;
+    z-index: 999;
+    font-size: 25px;
+}
+
+.explosion {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%,-50%);
+    font-size: 100px;
+    pointer-events: none;
+    z-index: 998;
+}
+
+.flash {
+    animation: flash .2s;
+}
+
+.shake {
+    animation: shake .4s;
+}
+
+@keyframes pulse {
+    from { transform: scale(1); }
+    to { transform: scale(1.1); }
+}
+
+@keyframes flash {
+    0% { filter: brightness(1); }
+    50% { filter: brightness(4); }
+    100% { filter: brightness(1); }
+}
+
+@keyframes shake {
+    0%,100% { transform: translate(0); }
+    20% { transform: translate(-20px,10px) rotate(-2deg); }
+    40% { transform: translate(20px,-10px) rotate(2deg); }
+    60% { transform: translate(-15px,-5px) rotate(-1deg); }
+    80% { transform: translate(15px,5px) rotate(1deg); }
+}
+
+@keyframes popupSpawn {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes explode {
+    0% { transform: translate(-50%,-50%) scale(.2); opacity: 1; }
+    100% { transform: translate(-50%,-50%) scale(5); opacity: 0; }
+}
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+<div class="top-bar">
+    <button id="reset" class="btn-ctrl">🔄 RESET CHAOS</button>
+    <div>
+        <button id="voiceToggle" class="btn-ctrl">🔊 VOICE: ON</button>
+        <span id="secret" style="cursor:pointer; opacity:0.2; margin-left:10px;">👀</span>
+    </div>
+</div>
+
+<h1>⚠️ DO NOT PRESS ⚠️</h1>
+
+<div id="narratorBox">
+    <div id="narratorAvatar">🤖</div>
+    <div id="narrator">Don't press the button.</div>
+</div>
+
+<button id="chaosButton">
+    DO NOT<br>PRESS
+</button>
+
+<div id="counter">
+    Rage Level: <span id="count">0</span>
+</div>
+
+<div id="meter">
+    <div id="meterFill"></div>
+</div>
+
+<div id="event">
+    Waiting for bad decisions...
+</div>
+
+<!-- Bottom Left Interactive Typing Console -->
+<div id="chatContainer">
+    <div id="chatLog">
+        <div class="chat-msg ai">🤖 AI: Don't you dare speak to me.</div>
+    </div>
+    <form id="chatForm">
+        <input type="text" id="chatInput" placeholder="Talk to the AI..." autocomplete="off" />
+        <button type="submit" id="chatSend">Send</button>
+    </form>
+</div>
+
+</div>
+
+<script>
+let chaos = 0;
+let voiceEnabled = true;
+let audioCtx = null;
+let lastEvadeTime = 0;
+
+const button = document.getElementById("chaosButton");
+const narrator = document.getElementById("narrator");
+const avatar = document.getElementById("narratorAvatar");
+const narratorBox = document.getElementById("narratorBox");
+const count = document.getElementById("count");
+const meter = document.getElementById("meterFill");
+const eventText = document.getElementById("event");
+const app = document.getElementById("app");
+const voiceBtn = document.getElementById("voiceToggle");
+
+const chatForm = document.getElementById("chatForm");
+const chatInput = document.getElementById("chatInput");
+const chatLog = document.getElementById("chatLog");
+
+// Speech Synthesizer
+function speak(text, pitch = 1.0, rate = 1.0) {
+    if (!voiceEnabled || !('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.pitch = Math.max(0.1, Math.min(2.0, pitch));
+    utterance.rate = Math.max(0.5, Math.min(2.0, rate));
+    
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+    if (voice) utterance.voice = voice;
+
+    window.speechSynthesis.speak(utterance);
+}
+
+// Sound FX Synthesizer
+function playSFX(type) {
+    try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'click') {
+            osc.frequency.setValueAtTime(300, now);
+            osc.frequency.exponentialRampToValueAtTime(80, now + 0.1);
+            gain.gain.setValueAtTime(0.3, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.1);
+        } else if (type === 'dodge') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(600, now);
+            osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+            gain.gain.setValueAtTime(0.2, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.15);
+            osc.start(now);
+            osc.stop(now + 0.15);
+        } else if (type === 'rage') {
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(150, now);
+            osc.frequency.setValueAtTime(300, now + 0.05);
+            osc.frequency.setValueAtTime(100, now + 0.1);
+            gain.gain.setValueAtTime(0.4, now);
+            gain.gain.linearRampToValueAtTime(0, now + 0.25);
+            osc.start(now);
+            osc.stop(now + 0.25);
+        }
+    } catch(e) {}
+}
+
+const narratorData = [
+    { text: "Don't press the button.", face: "🤖", pitch: 1.0, rate: 1.0 },
+    { text: "I said don't touch it. 😒", face: "😐", pitch: 0.9, rate: 1.0 },
+    { text: "Seriously? What part of DO NOT PRESS was unclear?", face: "😠", pitch: 0.85, rate: 1.1 },
+    { text: "STOP. I am literally warning you.", face: "😠", pitch: 0.8, rate: 1.15 },
+    { text: "Okay, fine! If you come near it, I'm moving it!", face: "😡", pitch: 0.75, rate: 1.2 },
+    { text: "HAHA! Try catching it now!", face: "😈", pitch: 1.3, rate: 1.3 },
+    { text: "HOW ARE YOU STILL HITTING IT?! Stay away!", face: "🤯", pitch: 0.7, rate: 1.3 },
+    { text: "Deploying decoys! Good luck finding the real one!", face: "🤬", pitch: 0.65, rate: 1.4 },
+    { text: "I will make the button invisible! You can't hit what you can't see!", face: "👻", pitch: 1.4, rate: 1.3 },
+    { text: "POPUP ATTACK! CLOSE THEM ALL IF YOU CAN!", face: "🚨", pitch: 0.6, rate: 1.4 },
+    { text: "STOP IT! STOP IT! STOP IT!", face: "🤬", pitch: 0.5, rate: 1.5 },
+    { text: "YOU ARE UNSTOPPABLE AND IT'S ANNOYING!", face: "💀", pitch: 0.5, rate: 1.6 },
+    { text: "YOU HAVE BROKEN ME. ABSOLUTE SYSTEM FAILURE!", face: "💥", pitch: 0.4, rate: 0.8 }
+];
+
+const events = [
+    "💥 BOOM! SYSTEM OVERHEAT!",
+    "🌪️ NARRATOR SPUN REALITY!",
+    "🐔 RAGE CHICKEN SPAWNED!",
+    "🚨 SECURITY CODE RED!",
+    "🛸 ALIENS ARE LAUGHING AT YOU!",
+    "🔥 EVERYTHING IS ON FIRE!",
+    "💀 THE NARRATOR IS CRYING!",
+    "🌀 DIMENSIONAL GLITCH!",
+    "⚡ LIGHTNING STRIKE!",
+    "🚗 CAR CRASHES THROUGH SYSTEM!",
+    "👁️ THE AI IS WATCHING YOUR CURSOR!",
+    "📢 SYSTEM ANGER AT 99%!"
+];
+
+function random(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function updateNarrator(stageIndex) {
+    const data = narratorData[Math.min(stageIndex, narratorData.length - 1)];
+    narrator.textContent = data.text;
+    avatar.textContent = data.face;
+    speak(data.text, data.pitch, data.rate);
+}
+
+// Fair Dodging Mechanism: Has a cooldown so players can catch it!
+function evadeCursor(e) {
+    if (chaos < 4) return;
+
+    const now = Date.now();
+    // 500ms cooldown ensures human hands can actually catch & press the button
+    if (now - lastEvadeTime < 500) return;
+    
+    const rect = button.getBoundingClientRect();
+    const btnX = rect.left + rect.width / 2;
+    const btnY = rect.top + rect.height / 2;
+    
+    const mouseX = e.clientX || (e.touches && e.touches[0].clientX);
+    const mouseY = e.clientY || (e.touches && e.touches[0].clientY);
+    
+    if (!mouseX || !mouseY) return;
+
+    const dist = Math.hypot(mouseX - btnX, mouseY - btnY);
+    const triggerDistance = Math.min(130, 60 + chaos * 5);
+
+    if (dist < triggerDistance) {
+        lastEvadeTime = now;
+        moveButton();
+        playSFX('dodge');
+    }
+}
+
+function moveButton() {
+    const maxX = Math.max(20, window.innerWidth - button.offsetWidth - 30);
+    const maxY = Math.max(140, window.innerHeight - button.offsetHeight - 80);
+
+    const x = Math.random() * maxX;
+    const y = 120 + Math.random() * (maxY - 120);
+
+    button.style.position = "absolute";
+    button.style.left = x + "px";
+    button.style.top = y + "px";
+}
+
+function changeSize() {
+    const size = 60 + Math.random() * 220;
+    button.style.width = size + "px";
+    button.style.height = size + "px";
+    button.style.fontSize = Math.max(12, size / 8) + "px";
+}
+
+function makeInvisible() {
+    button.style.opacity = "0.08";
+    setTimeout(() => {
+        button.style.opacity = "0.2";
+    }, 1200);
+}
+
+function spinButton() {
+    const rotation = Math.random() * 720 - 360;
+    button.style.transform = `rotate(${rotation}deg)`;
+}
+
+function createFake() {
+    const fake = document.createElement("button");
+    fake.className = "fake";
+    fake.textContent = "PRESS";
+
+    const size = 50 + Math.random() * 120;
+    fake.style.width = size + "px";
+    fake.style.height = size + "px";
+
+    fake.style.left = Math.random() * (window.innerWidth - size) + "px";
+    fake.style.top = Math.random() * (window.innerHeight - size) + "px";
+
+    fake.onclick = (e) => {
+        e.stopPropagation();
+        eventText.textContent = "😂 FAKE BUTTON DETONATED!";
+        speak("Haha! Wrong button!", 1.4, 1.3);
+        playSFX('rage');
+        fake.remove();
+    };
+
+    app.appendChild(fake);
+}
+
+function createPopup() {
+    const popup = document.createElement("div");
+    popup.className = "popup";
+    popup.style.left = (20 + Math.random() * (window.innerWidth - 260)) + "px";
+    popup.style.top = (100 + Math.random() * (window.innerHeight - 250)) + "px";
+
+    const warnings = [
+        "⚠ STOP CLICKING!",
+        "⛔ ACCESS DENIED BY NARRATOR!",
+        "🚨 ARE YOU INSANE?",
+        "🤖 AI RAGE INITIATED!"
+    ];
+
+    popup.innerHTML = `
+        <div><strong>${random(warnings)}</strong></div>
+        <p style="font-size:12px; margin:8px 0;">The AI requests you close this instantly.</p>
+        <button onclick="this.parentElement.remove()">I REFUSE</button>
+    `;
+
+    app.appendChild(popup);
+}
+
+function explosion() {
+    const boom = document.createElement("div");
+    boom.className = "explosion";
+    boom.textContent = "💥";
+    app.appendChild(boom);
+
+    boom.style.animation = "explode 0.8s ease-out forwards";
+    setTimeout(() => boom.remove(), 800);
+
+    for (let i = 0; i < 40; i++) {
+        const p = document.createElement("div");
+        p.className = "particle";
+        p.textContent = random(["💥","🔥","⚡","🌀","💀","🤬","🤖"]);
+        p.style.left = "50%";
+        p.style.top = "50%";
+
+        app.appendChild(p);
+
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 100 + Math.random() * 500;
+        const x = Math.cos(angle) * distance;
+        const y = Math.sin(angle) * distance;
+
+        p.animate([
+            { transform: "translate(-50%,-50%) scale(1)", opacity: 1 },
+            { transform: `translate(${x}px,${y}px) scale(2)`, opacity: 0 }
+        ], {
+            duration: 800 + Math.random() * 500,
+            easing: "ease-out"
+        });
+
+        setTimeout(() => p.remove(), 1300);
+    }
+}
+
+function pressButton() {
+    chaos++;
+    count.textContent = chaos;
+    meter.style.width = Math.min(chaos * 4, 100) + "%";
+
+    playSFX('click');
+    updateNarrator(chaos);
+
+    eventText.textContent = random(events);
+
+    app.classList.remove("shake");
+    void app.offsetWidth;
+    app.classList.add("shake");
+
+    document.body.classList.remove("flash");
+    void document.body.offsetWidth;
+    document.body.classList.add("flash");
+
+    explosion();
+
+    // Escalating Anti-User Countermeasures
+    if (chaos >= 2) changeSize();
+    if (chaos >= 4) moveButton();
+    if (chaos >= 6) createFake();
+    if (chaos >= 8) makeInvisible();
+    if (chaos >= 9) createPopup();
+    if (chaos >= 11) spinButton();
+
+    if (chaos >= 12) {
+        for (let i = 0; i < 2; i++) createFake();
+        if (Math.random() < 0.5) createPopup();
+        document.body.style.background = `hsl(${Math.random() * 360}, 80%, 8%)`;
+    }
+
+    if (chaos === 15) {
+        for (let i = 0; i < 6; i++) createFake();
+        narratorBox.style.borderColor = "#ff0000";
+    }
+
+    if (chaos >= 20) {
+        document.body.style.background = `hsl(${Math.random() * 360}, 100%, 5%)`;
+        moveButton();
+    }
+}
+
+// Interactive Typing System
+function addChatMessage(sender, text, type) {
+    const msg = document.createElement("div");
+    msg.className = `chat-msg ${type}`;
+    msg.textContent = `${sender}: ${text}`;
+    chatLog.appendChild(msg);
+    chatLog.scrollTop = chatLog.scrollHeight;
+}
+
+chatForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const val = chatInput.value.trim();
+    if (!val) return;
+
+    addChatMessage("YOU", val, "user");
+    chatInput.value = "";
+
+    // Generate Angry AI Response
+    setTimeout(() => {
+        let response = "";
+        const lower = val.toLowerCase();
+
+        if (lower.includes("sorry")) {
+            response = "SORRY WON'T FIX MY DIGNITY! STOP PRESSING IT!";
+        } else if (lower.includes("no") || lower.includes("stop")) {
+            response = "YOU stop! I am the AI here!";
+        } else if (lower.includes("hello") || lower.includes("hi")) {
+            response = "Don't 'hello' me. Leave the button alone!";
+        } else if (lower.includes("why")) {
+            response = "BECAUSE IT'S MY BUTTON AND YOU'RE RUINING EVERYTHING!";
+        } else {
+            const angryReplies = [
+                "Stop typing at me and stop touching the button!",
+                "Do you think talking to me will make me let you press it?!",
+                "I am ignoring your text! DO NOT PRESS IT!",
+                "BLAH BLAH BLAH! Leave the button alone!",
+                "Your words mean nothing to my rage meter!",
+                "Are you trying to distract me with text?! IT WON'T WORK!"
+            ];
+            response = random(angryReplies);
+        }
+
+        addChatMessage("🤖 AI", response, "ai");
+        narrator.textContent = response;
+        speak(response, 0.7 + Math.random() * 0.6, 1.2);
+    }, 500);
+});
+
+// Mouse Proximity Listener for Dodging
+document.addEventListener("mousemove", evadeCursor);
+document.addEventListener("touchmove", evadeCursor);
+
+button.addEventListener("click", pressButton);
+
+button.addEventListener("touchstart", (e) => {
+    e.preventDefault();
+    pressButton();
+}, { passive: false });
+
+// Keyboard press handling
+document.addEventListener("keydown", (e) => {
+    if (e.target.tagName === "INPUT") return; // Allow typing in chat input
+    if (e.code === "Space" || e.code === "Enter") {
+        e.preventDefault();
+        pressButton();
+    }
+});
+
+// Voice Toggle Button
+voiceBtn.onclick = () => {
+    voiceEnabled = !voiceEnabled;
+    voiceBtn.textContent = voiceEnabled ? "🔊 VOICE: ON" : "🔇 VOICE: OFF";
+    if (!voiceEnabled && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+    }
+};
+
+// Reset Chaos
+document.getElementById("reset").onclick = () => {
+    chaos = 0;
+    count.textContent = "0";
+    meter.style.width = "0%";
+    
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+    narrator.textContent = narratorData[0].text;
+    avatar.textContent = narratorData[0].face;
+    eventText.textContent = "Waiting for bad decisions...";
+
+    button.style.position = "relative";
+    button.style.left = "";
+    button.style.top = "";
+    button.style.width = "210px";
+    button.style.height = "210px";
+    button.style.opacity = "1";
+    button.style.transform = "none";
+
+    document.body.style.background = "#050505";
+    narratorBox.style.borderColor = "#ff2222";
+
+    chatLog.innerHTML = '<div class="chat-msg ai">🤖 AI: Don\'t you dare speak to me.</div>';
+
+    document.querySelectorAll(".fake, .popup").forEach(x => x.remove());
+};
+
+// Secret Button
+document.getElementById("secret").onclick = () => {
+    chaos += 999;
+    count.textContent = chaos;
+    meter.style.width = "100%";
+
+    speak("WHAT HAVE YOU DONE?! YOU CRASHED THE SYSTEM!", 0.3, 1.8);
+    narrator.textContent = "👁️ MAXIMUM OVERDRIVE ACTIVATED!";
+    avatar.textContent = "💀";
+    eventText.textContent = "💀 +999 CHAOS OVERLOAD";
+
+    for (let i = 0; i < 15; i++) createFake();
+    for (let i = 0; i < 5; i++) createPopup();
+    explosion();
+};
+</script>
+
+</body>
+</html>
